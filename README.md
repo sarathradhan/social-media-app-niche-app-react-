@@ -636,5 +636,3 @@ Last updated: December 8, 2025
 The application is fully functional, tested, and ready for deployment. Just complete the 3 pre-deployment steps and you're live!
 
 ---
-
-**Built with ❤️ by Niche Team**
