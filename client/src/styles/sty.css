@@ -1,0 +1,1317 @@
+:root {
+     --primary: #0a66c2;
+     --primary-hover: #0950a2;
+     --text: #111;
+     --muted: #555;
+     --border: #ddd;
+     --bg: #f7f9fa;
+     --card-bg: #fff;
+     --sidebar-left: 220px;
+     --sidebar-right: 280px;
+     --shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+     --radius: 12px;
+     --transition-fast: 0.2s ease;
+}
+ *, *::before, *::after {
+     box-sizing: border-box;
+}
+ html {
+     scroll-behavior: smooth;
+}
+ body {
+     margin: 0;
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+     font-size: 16px;
+     line-height: 1.5;
+     color: var(--text);
+     background: var(--bg);
+     -webkit-font-smoothing: antialiased;
+}
+ h1, h2, h3, h4, h5, h6 {
+     margin: 0;
+     font-weight: 600;
+}
+ a {
+     color: var(--primary);
+     text-decoration: none;
+     transition: color var(--transition-fast);
+}
+ a:hover {
+     text-decoration: underline;
+}
+ img {
+     max-width: 100%;
+     display: block;
+}
+ button, input, textarea {
+     font-family: inherit;
+     font-size: 1rem;
+}
+ .btn {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 6px;
+     padding: 8px 18px;
+     border: none;
+     border-radius: var(--radius);
+     font-weight: 600;
+     cursor: pointer;
+     transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+ .btn-primary {
+     background: var(--primary);
+     color: #fff;
+}
+ .btn-primary:hover {
+     background: var(--primary-hover);
+}
+ .btn-muted {
+     background: #e0e0e0;
+     color: var(--text);
+}
+ .btn-muted:hover {
+     opacity: 0.8;
+}
+ .text-muted {
+     color: var(--muted);
+}
+ .mt-0 {
+     margin-top: 0 !important;
+}
+ .mb-0 {
+     margin-bottom: 0 !important;
+}
+ .side2 {
+     position: fixed;
+     top: 0;
+     right: 0;
+     width: 280px;
+     height: 100vh;
+     background: var(--card-bg);
+     border-left: 1px solid var(--border);
+     padding: 24px 18px;
+     overflow-y: auto;
+}
+ .sbar {
+     margin-bottom: 24px;
+}
+ .sbar .bar {
+     width: 100%;
+     height: 8px;
+     background: var(--primary);
+     border-radius: 4px;
+}
+ .login-signup {
+     font-size: 0.95rem;
+     margin-bottom: 24px;
+}
+ .vids h1 {
+     font-size: 1.2rem;
+     margin-bottom: 14px;
+}
+ .vid-row {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     margin-bottom: 10px;
+     font-size: 0.95rem;
+}
+ .main-rail {
+     max-width: 680px;
+     width: calc(100vw - var(--sidebar-left) - var(--sidebar-right));
+     margin-left: auto;
+     margin-right: auto;
+     margin-left: calc(var(--sidebar-left) + max(0px, (100vw - var(--sidebar-left) - var(--sidebar-right) - 680px) / 2));
+     padding: 32px;
+     padding-bottom: 120px;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: flex-start;
+     box-sizing: border-box;
+     position: relative;
+}
+ .main-rail h1 {
+     text-align: center;
+     width: 100%;
+     margin-bottom: 24px;
+}
+ .ennamo {
+     max-width: 680px;
+     width: calc(100vw - var(--sidebar-left) - var(--sidebar-right));
+     margin-left: auto;
+     margin-right: auto;
+     margin-left: calc(var(--sidebar-left) + max(0px, (100vw - var(--sidebar-left) - var(--sidebar-right) - 680px) / 2));
+     padding: 40px 32px;
+     padding-bottom: 120px;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     min-height: calc(100vh - 80px);
+     box-sizing: border-box;
+     position: relative;
+}
+ .posts-container {
+     display: flex;
+     flex-direction: column;
+     gap: 24px;
+     max-width: 600px;
+     width: 100%;
+     margin: 0 auto;
+}
+ .posts-container > p {
+     text-align: center;
+     color: var(--muted);
+     padding: 20px;
+}
+ .post-card {
+     background: var(--card-bg);
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     padding: 16px;
+     box-shadow: var(--shadow);
+     overflow: visible;
+     word-wrap: break-word;
+     width: 100%;
+     margin: 0 auto;
+}
+ .post-header {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     margin-bottom: 10px;
+}
+ .post-header .post-avatar img {
+     width: 48px;
+     height: 48px;
+     border-radius: 50%;
+     object-fit: cover;
+     display: block;
+}
+ .username-link {
+     font-weight: 600;
+     color: var(--text);
+     text-decoration: none;
+}
+ .username-link:hover {
+     text-decoration: underline;
+}
+ .post-card p {
+     max-width: 100%;
+     margin: 10px 0;
+     white-space: pre-wrap;
+     overflow-wrap: break-word;
+     word-break: break-word;
+     line-height: 1.6;
+     color: var(--text);
+}
+ .post-card img {
+     width: 100%;
+     max-width: 100%;
+     height: auto;
+     max-height: none;
+     object-fit: contain;
+     border-radius: var(--radius);
+     margin-top: 10px;
+     display: block;
+     cursor: pointer;
+}
+ .post-card img:hover {
+     opacity: 0.95;
+}
+ .post-card button {
+     background: none;
+     border: none;
+     cursor: pointer;
+     font-size: 1rem;
+     padding: 8px 12px;
+     margin-top: 10px;
+     display: inline-flex;
+     align-items: center;
+     gap: 6px;
+}
+ .post-card button:hover {
+     opacity: 1;
+}
+ .post-card .like-btn:hover {
+     opacity: 1;
+     background: none;
+}
+ .post-card .delete-btn {
+     background: #ff4444;
+     color: white;
+     border-radius: 8px;
+     padding: 8px 16px;
+     margin-top: 12px;
+}
+ .post-card .delete-btn:hover {
+     background: #cc0000;
+     opacity: 1;
+}
+ .post-card .unlike-btn {
+     background: #ff6b6b;
+     color: white;
+     border-radius: 8px;
+     padding: 8px 16px;
+     margin-top: 12px;
+}
+ .post-card .unlike-btn:hover {
+     background: #ff4444;
+     opacity: 1;
+}
+ .post-form {
+     background: var(--card-bg);
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     padding: 24px;
+     max-width: 540px;
+     width: 100%;
+     margin: 40px auto;
+     box-shadow: var(--shadow);
+}
+ .post-form h2 {
+     margin-top: 0;
+     margin-bottom: 18px;
+}
+ .post-form textarea {
+     width: 100%;
+     min-height: 120px;
+     padding: 10px;
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     margin-bottom: 16px;
+     background: #ffffff;
+     color: #000000;
+}
+ .post-form input[type="file"] {
+     margin-bottom: 16px;
+}
+ .people-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+     gap: 22px;
+     margin-top: 40px;
+}
+ .person-card {
+     background: var(--card-bg);
+     padding: 18px;
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     text-align: center;
+     box-shadow: var(--shadow);
+}
+ .person-card img {
+     width: 90px;
+     height: 90px;
+     object-fit: cover;
+     border-radius: 50%;
+     margin-bottom: 10px;
+}
+ .person-card h3 {
+     margin: 6px 0 10px;
+     font-size: 1.05rem;
+}
+ .person-card form button {
+     padding: 6px 16px;
+     border: none;
+     border-radius: var(--radius);
+     cursor: pointer;
+     background: var(--primary);
+     color: #fff;
+     font-weight: 600;
+     transition: background var(--transition-fast);
+}
+ .person-card form button:hover {
+     background: var(--primary-hover);
+}
+ .person-card form .unfollow {
+     background: #e0e0e0;
+     color: var(--text);
+}
+ .profile-wrap {
+     display: flex;
+     gap: 32px;
+     margin-top: 40px;
+}
+ .profile-wrap .avatar {
+     width: 140px;
+     height: 140px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 4px solid var(--primary);
+}
+ .profile-wrap .meta h2 {
+     font-size: 2rem;
+     margin: 0 0 6px;
+}
+ .profile-wrap .bio {
+     margin-top: 12px;
+     white-space: pre-line;
+     color: var(--muted);
+}
+ .edit-toggle {
+     margin-top: 12px;
+     cursor: pointer;
+     color: var(--primary);
+     background: none;
+     border: none;
+     font-size: 1rem;
+}
+ .follow-btn, .unfollow-btn {
+     margin-top: 12px;
+     padding: 10px 20px;
+     border: none;
+     border-radius: 8px;
+     font-size: 1rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: all 0.2s;
+}
+ .follow-btn {
+     background: var(--primary);
+     color: white;
+}
+ .follow-btn:hover {
+     background: var(--primary-hover);
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(10, 102, 194, 0.3);
+}
+ .unfollow-btn {
+     background: #f0f0f0;
+     color: #333;
+}
+ .unfollow-btn:hover {
+     background: #e0e0e0;
+     transform: translateY(-1px);
+}
+ .edit-box {
+     margin-top: 16px;
+     display: none;
+}
+ .edit-box textarea {
+     width: 100%;
+     min-height: 80px;
+     padding: 8px;
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     background: #ffffff;
+     color: #000000;
+}
+ .edit-box input[type="file"] {
+     margin: 8px 0;
+}
+ .edit-box button {
+     padding: 8px 18px;
+     border: none;
+     background: var(--primary);
+     color: #fff;
+     border-radius: var(--radius);
+     margin-top: 10px;
+     cursor: pointer;
+     transition: background var(--transition-fast);
+}
+ .edit-box button:hover {
+     background: var(--primary-hover);
+}
+ .edit-form {
+     background: #ffffff;
+     border: 1px solid #e5e5e5;
+     border-radius: 12px;
+     padding: 24px;
+     margin-top: 16px;
+     width: 100%;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+ .form-group {
+     margin-bottom: 20px;
+}
+ .form-group:last-of-type {
+     margin-bottom: 0;
+}
+ .form-group label {
+     display: block;
+     margin-bottom: 8px;
+     color: #333;
+     font-weight: 600;
+     font-size: 0.95rem;
+}
+ .form-group textarea {
+     width: 100%;
+     min-height: 100px;
+     padding: 12px;
+     border: 1px solid #e0e0e0;
+     border-radius: 8px;
+     font-family: inherit;
+     font-size: 0.95rem;
+     background: #ffffff;
+     color: #000000;
+     resize: vertical;
+     transition: border-color 0.2s, box-shadow 0.2s;
+     box-sizing: border-box;
+}
+ .form-group textarea:focus {
+     outline: none;
+     border-color: #0a66c2;
+     box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.1);
+     color: #000000;
+}
+ .form-group input[type="file"] {
+     width: 100%;
+     padding: 10px;
+     border: 2px dashed #e0e0e0;
+     border-radius: 8px;
+     background: #fafafa;
+     font-family: inherit;
+     font-size: 0.9rem;
+     cursor: pointer;
+     transition: border-color 0.2s, background 0.2s;
+}
+ .form-group input[type="file"]:hover {
+     border-color: #0a66c2;
+     background: #f5f8ff;
+}
+ .form-buttons {
+     display: flex;
+     gap: 12px;
+     margin-top: 24px;
+     flex-wrap: wrap;
+}
+ .form-buttons button {
+     padding: 10px 20px;
+     border: none;
+     border-radius: 8px;
+     font-weight: 600;
+     font-size: 0.95rem;
+     cursor: pointer;
+     transition: all 0.2s;
+     flex: 1;
+     min-width: 120px;
+}
+ .save-btn {
+     background: #0a66c2;
+     color: white;
+}
+ .save-btn:hover:not(:disabled) {
+     background: #0950a2;
+     transform: translateY(-1px);
+     box-shadow: 0 4px 8px rgba(10, 102, 194, 0.3);
+}
+ .save-btn:disabled {
+     opacity: 0.6;
+     cursor: not-allowed;
+}
+ .cancel-btn {
+     background: #f0f0f0;
+     color: #333;
+}
+ .cancel-btn:hover:not(:disabled) {
+     background: #e0e0e0;
+     transform: translateY(-1px);
+}
+ .cancel-btn:disabled {
+     opacity: 0.6;
+     cursor: not-allowed;
+}
+ .grid {
+     margin-top: 40px;
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+     gap: 18px;
+}
+ .grid-item {
+     position: relative;
+     aspect-ratio: 1;
+     overflow: hidden;
+     border-radius: var(--radius);
+     cursor: pointer;
+}
+ .grid img, .grid-item img {
+     width: 100%;
+     aspect-ratio: 1 / 1;
+     object-fit: cover;
+     border-radius: var(--radius);
+     transition: opacity var(--transition-fast);
+}
+ .grid img:hover, .grid-item img:hover {
+     opacity: 0.8;
+}
+ .grid-item .overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: rgba(0, 0, 0, 0.5);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     opacity: 0;
+     transition: opacity 0.2s;
+}
+ .grid-item:hover .overlay {
+     opacity: 1;
+}
+ .grid-item .overlay-text {
+     color: white;
+     font-weight: 600;
+}
+ .profile-container {
+     display: flex;
+     flex-direction: column;
+     gap: 40px;
+     width: 100%;
+}
+ .profile-left {
+     width: 100%;
+}
+ .profile-right {
+     width: 100%;
+}
+ .profile-right .grid {
+     margin-top: 0;
+}
+ .post-form {
+     background: #fff;
+     padding: 20px 25px;
+     border-radius: 16px;
+     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+     max-width: 600px;
+     width: 100%;
+     margin: 20px auto;
+     transition: box-shadow 0.3s ease;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+}
+ .post-form h2 {
+     text-align: center;
+     width: 100%;
+}
+ .post-form:hover {
+     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+ .post-form h2 {
+     font-size: 1.5rem;
+     font-weight: 600;
+     margin-bottom: 16px;
+     color: #333;
+     text-align: center;
+     width: 100%;
+}
+ .post-form form {
+     display: flex;
+     flex-direction: column;
+     gap: 16px;
+     width: 100%;
+}
+ .post-form form label {
+     text-align: left;
+     width: 100%;
+}
+ .post-form form button {
+     width: 100%;
+     max-width: 200px;
+     margin: 0 auto;
+}
+ .post-form textarea {
+     width: 100%;
+     min-height: 120px;
+     padding: 14px;
+     font-size: 1rem;
+     border: 1px solid #ccc;
+     border-radius: 10px;
+     resize: vertical;
+     transition: border-color 0.2s;
+     background: #ffffff;
+     color: #000000;
+}
+ .post-form textarea:focus {
+     border-color: #0077ff;
+     outline: none;
+     box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.15);
+     background: #ffffff;
+     color: #000000;
+}
+ .post-form input[type="file"] {
+     border: none;
+     background: #f7f7f7;
+     padding: 8px;
+     border-radius: 8px;
+     font-size: 0.95rem;
+}
+ .post-form button {
+     padding: 12px;
+     background: #0077ff;
+     color: white;
+     font-size: 1rem;
+     border: none;
+     border-radius: 10px;
+     cursor: pointer;
+     transition: background 0.3s ease;
+}
+ .post-form button:hover {
+     background: #005ecc;
+}
+ .side {
+     width: var(--sidebar-left);
+}
+ .side2 {
+     width: var(--sidebar-right);
+}
+ .side2 {
+     padding: 24px 18px 70px;
+     gap: 24px;
+}
+ .vid-row img {
+     width: 36px;
+     height: 36px;
+}
+ .side {
+     transition: width 0.25s ease;
+}
+ .side ul {
+     display: flex;
+     flex-direction: column;
+     gap: 18px;
+     padding: 0;
+     margin: 32px 0 0;
+}
+ .side li {
+     margin: 0;
+}
+ .side li a {
+     padding: 8px 12px;
+}
+ .side {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 220px;
+     height: 100vh;
+     background: var(--card-bg, #ffffff);
+     border-right: 1px solid var(--border, #e0e0e0);
+     padding: 24px 16px 32px;
+     display: flex;
+     flex-direction: column;
+     overflow-y: auto;
+     scrollbar-width: thin;
+     scrollbar-color: var(--primary, #0a66c2) transparent;
+}
+ .sidebar {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 220px;
+     height: 100vh;
+     background: var(--card-bg, #ffffff);
+     border-right: 1px solid var(--border, #e0e0e0);
+     padding: 24px 16px 32px;
+     display: flex;
+     flex-direction: column;
+     overflow-y: auto;
+     scrollbar-width: thin;
+     scrollbar-color: var(--primary, #0a66c2) transparent;
+}
+ .side .logo {
+     font-size: 1.85rem;
+     font-weight: 700;
+     margin-bottom: 32px;
+}
+ .side ul {
+     list-style: none;
+     padding: 0;
+     margin: 0;
+     display: flex;
+     flex-direction: column;
+     gap: 22px;
+}
+ .side li {
+     margin: 0;
+     width: 100%;
+}
+ .side li a {
+     display: flex;
+     align-items: center;
+     gap: 14px;
+     width: 100%;
+     padding: 10px 12px;
+     border-radius: 12px;
+     font-size: 1rem;
+     font-weight: 500;
+     color: var(--text, #111);
+     text-decoration: none;
+     transition: background 0.2s ease, color 0.2s ease;
+}
+ .side li a.active, .side li a:hover {
+     background: rgba(0, 0, 0, 0.06);
+}
+ .side li a img, .side li a svg {
+     width: 24px;
+     height: 24px;
+     flex-shrink: 0;
+     object-fit: contain;
+     stroke: currentColor;
+     opacity: 0.9;
+     filter: brightness(0);
+}
+ .side li a:hover img, .side li a:hover svg {
+     opacity: 1;
+     filter: brightness(0);
+}
+ .sidebar ul {
+     list-style: none;
+     padding: 0;
+     margin: 0;
+     display: flex;
+     flex-direction: column;
+     gap: 22px;
+}
+ .sidebar li {
+     margin: 0;
+     width: 100%;
+}
+ .sidebar li a {
+     display: flex;
+     align-items: center;
+     gap: 14px;
+     width: 100%;
+     padding: 10px 12px;
+     border-radius: 12px;
+     font-size: 1rem;
+     font-weight: 500;
+     color: var(--text, #111);
+     text-decoration: none;
+     transition: background 0.2s ease, color 0.2s ease;
+}
+ .sidebar li a.active, .sidebar li a:hover {
+     background: rgba(0, 0, 0, 0.06);
+}
+ .sidebar li a img, .sidebar li a svg {
+     width: 24px;
+     height: 24px;
+     flex-shrink: 0;
+     object-fit: contain;
+     stroke: currentColor;
+     opacity: 0.9;
+     filter: brightness(0);
+}
+ .sidebar li a:hover img, .sidebar li a:hover svg {
+     opacity: 1;
+     filter: brightness(0);
+}
+ .stats {
+     display: flex;
+     gap: 18px;
+     font-size: .95rem;
+     margin-top: 6px;
+}
+ .stats span a {
+     color: inherit;
+     text-decoration: none;
+}
+ .stats span a:hover {
+     text-decoration: underline;
+}
+ .side-list img {
+     filter: brightness(1) invert(1);
+}
+ .like-btn {
+     position: relative;
+     border: none;
+     background: transparent;
+     display: inline-flex;
+     align-items: center;
+     gap: 6px;
+     cursor: pointer;
+     padding: 6px;
+}
+ .like-btn .count {
+     font-weight: 600;
+     color: #000000;
+     font-size: 0.95rem;
+}
+ .heart {
+     width: 24px;
+     height: 24px;
+     background: url("/ICONS/heart-outlined.svg") center/contain no-repeat;
+     display: block;
+     transition: transform .3s cubic-bezier(.45, 1.4, .4, 1);
+}
+ .like-btn.liked .heart {
+     background: url("/ICONS/heart-filled.svg") center/contain no-repeat;
+     animation: pop .3s forwards, burst .6s;
+}
+ .like-btn.liked .count {
+     color: #000000;
+}
+ @keyframes pop {
+     0% {
+         transform: scale(.6);
+    }
+     60% {
+         transform: scale(1.4);
+    }
+     100% {
+         transform: scale(1);
+    }
+}
+ @keyframes burst {
+     0% {
+         box-shadow: 0 0 0 0 var(--accent-red), 0 0 0 0 var(--accent-red), 0 0 0 0 var(--accent-red), 0 0 0 0 var(--accent-red), 0 0 0 0 var(--accent-red), 0 0 0 0 var(--accent-red);
+    }
+     30% {
+         box-shadow: 0 -18px 0 -2px var(--accent-red), 14px -14px 0 -2px var(--accent-red), 18px 0 0 -2px var(--accent-red), 14px 14px 0 -2px var(--accent-red), 0 18px 0 -2px var(--accent-red), -14px 14px 0 -2px var(--accent-red), -18px 0 0 -2px var(--accent-red), -14px -14px 0 -2px var(--accent-red);
+    }
+     100% {
+         box-shadow: none;
+    }
+}
+ @media (max-width: 1050px) {
+     .side2 {
+         display: none;
+    }
+     .side {
+         position: fixed;
+         bottom: 0;
+         left: 0;
+         right: 0;
+         top: auto;
+         width: 100%;
+         height: 66px;
+         flex-direction: row;
+         align-items: center;
+         justify-content: center;
+         padding: 0 12px;
+         border-right: none;
+         border-top: 1px solid var(--border);
+         box-shadow: 0 -2px 6px rgba(0, 0, 0, .05);
+         overflow-x: auto;
+         scrollbar-width: none;
+    }
+     .side::-webkit-scrollbar {
+         display: none;
+    }
+     .side ul {
+         display: flex;
+         flex-direction: row;
+         gap: 10px;
+         margin: 0;
+         padding: 0;
+    }
+     .side .logo, .side li a span {
+         display: none;
+    }
+     .side li a img, .side li a svg {
+         width: 28px;
+         height: 28px;
+         flex-shrink: 0;
+         filter: brightness(0);
+    }
+     .main-rail {
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 140px;
+         width: 100%;
+         max-width: 100%;
+         transform: none;
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         justify-content: flex-start;
+    }
+     .ennamo {
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 140px;
+         width: 100%;
+         max-width: 100%;
+         transform: none;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         align-items: center;
+    }
+}
+ @media (max-width: 900px) {
+     .side li a .label {
+         display: none;
+    }
+     .side li a {
+         font-size: 0;
+    }
+     .side li a img, .side li a svg {
+         font-size: initial;
+         filter: brightness(0);
+    }
+}
+ @media (max-width: 900px) {
+     .people-grid {
+         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+         gap: 16px;
+    }
+     .person-card {
+         padding: 14px;
+    }
+     .person-card img {
+         width: 72px;
+         height: 72px;
+    }
+     .person-card h3 {
+         font-size: 0.95rem;
+    }
+     .person-card form button {
+         padding: 6px 12px;
+         font-size: 0.9rem;
+    }
+}
+ .profile-wrap img.avatar {
+     width: 110px;
+     height: 110px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 4px solid var(--primary);
+}
+ @media (max-width: 600px) {
+     .profile-wrap {
+         flex-direction: column;
+         align-items: center;
+         text-align: center;
+         margin-inline: auto;
+    }
+     .stats {
+         justify-content: center;
+    }
+}
+ .profile-wrap .bio, .post-card p {
+     white-space: pre-wrap;
+     overflow-wrap: break-word;
+}
+ @media (max-width:1100px) {
+     .main-rail {
+         width: calc(100vw - var(--sidebar-left));
+         margin-left: var(--sidebar-left);
+         margin-right: 0;
+         padding-right: 16px;
+         padding-bottom: 140px;
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         justify-content: flex-start;
+    }
+     .ennamo {
+         width: calc(100vw - var(--sidebar-left));
+         margin-left: var(--sidebar-left);
+         margin-right: 0;
+         padding-right: 16px;
+         padding-bottom: 140px;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         align-items: center;
+    }
+}
+ @media (max-width:1000px) {
+     .ennamo {
+         margin: 0 auto;
+         padding: 32px 16px 140px;
+         width: 100%;
+         max-width: 100%;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         align-items: center;
+    }
+}
+ .post-form {
+     width: 100%;
+     max-width: 540px;
+     background: var(--card-bg);
+     border: 1px solid var(--border);
+     border-radius: var(--radius);
+     box-shadow: var(--shadow);
+     padding: 24px 28px;
+     margin-left: auto;
+     margin-right: auto;
+}
+ @media (max-width:500px) {
+     .post-form {
+         max-width: 100%;
+         padding: 20px 16px;
+         border-radius: 10px;
+         margin: 16px auto;
+         width: calc(100% - 32px);
+    }
+     .post-form textarea {
+         min-height: 100px;
+    }
+     .main-rail {
+         display: flex;
+         flex-direction: column;
+         align-items: center;
+         justify-content: flex-start;
+         margin-left: 0;
+         margin-right: 0;
+    }
+     .ennamo {
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         align-items: center;
+         margin-left: 0;
+         margin-right: 0;
+    }
+}
+ .post-form input[type="file"] {
+     width: 100%;
+     padding: 12px;
+     background: #f7f7f7;
+     border: 2px dashed var(--border);
+     border-radius: var(--radius);
+     cursor: pointer;
+     transition: border-color var(--fast), background var(--fast);
+}
+ .post-form input[type="file"]:hover {
+     border-color: var(--primary);
+     background: #f0f8ff;
+}
+ .people-grid {
+     display: grid;
+     gap: 22px;
+     margin-top: 40px;
+     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+ @media (max-width: 900px) {
+     .people-grid {
+         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+         gap: 18px;
+    }
+     .person-card {
+         padding: 16px;
+    }
+     .person-card img {
+         width: 76px;
+         height: 76px;
+    }
+}
+ @media (min-width: 900px) {
+     .profile-main{
+         max-width: 680px;
+         width: calc(100vw - var(--sidebar-left) - var(--sidebar-right));
+         margin: 0 auto;
+         margin-left: calc(var(--sidebar-left) + max(0px, (100vw - var(--sidebar-left) - var(--sidebar-right) - 680px) / 2));
+         padding: 32px;
+         padding-bottom: 120px;
+    }
+     .explore-main{
+         max-width: 680px;
+         width: calc(100vw - var(--sidebar-left) - var(--sidebar-right));
+         margin: 0 auto;
+         margin-left: calc(var(--sidebar-left) + max(0px, (100vw - var(--sidebar-left) - var(--sidebar-right) - 680px) / 2));
+         padding: 32px;
+         padding-bottom: 120px;
+    }
+}
+ @media (max-width: 900px) {
+     .profile-main{
+         width: 100%;
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 120px;
+    }
+     .explore-main{
+         width: 100%;
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 120px;
+    }
+}
+ @media (max-width: 1050px) {
+     .profile-main{
+         width: 100%;
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 140px;
+    }
+     .explore-main{
+         width: 100%;
+         margin-left: 0;
+         margin-right: 0;
+         padding: 24px 16px 140px;
+    }
+     .profile-container {
+         flex-direction: column;
+         gap: 24px;
+    }
+     .profile-left, .profile-right {
+         width: 100%;
+    }
+     .grid {
+         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+         gap: 8px;
+    }
+}
+ @media (max-width: 768px) {
+     .post-card {
+         padding: 14px;
+         margin-bottom: 16px;
+    }
+     .post-header {
+         gap: 10px;
+    }
+     .post-avatar img {
+         width: 36px;
+         height: 36px;
+    }
+     .post-card p {
+         font-size: 0.95rem;
+         margin: 10px 0;
+    }
+     .post-card img {
+         margin: 12px 0;
+         border-radius: 8px;
+    }
+     .like-btn {
+         padding: 8px 12px;
+    }
+     .like-btn .count {
+         font-size: 0.9rem;
+    }
+     .main-rail h1 {
+         font-size: 1.5rem;
+         margin-bottom: 20px;
+    }
+     .posts-container {
+         padding: 0;
+    }
+     .profile-wrap {
+         flex-direction: column;
+         align-items: center;
+         text-align: center;
+    }
+     .profile-wrap .avatar {
+         width: 90px;
+         height: 90px;
+         margin-bottom: 16px;
+    }
+     .stats {
+         justify-content: center;
+         gap: 16px;
+         flex-wrap: wrap;
+    }
+     .edit-form, .post-form {
+         padding: 20px 16px;
+         margin: 16px 0;
+    }
+     .form-group textarea {
+         min-height: 80px;
+    }
+     .people-grid {
+         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+         gap: 16px;
+    }
+     .person-card {
+         padding: 14px;
+    }
+     .person-card img {
+         width: 64px;
+         height: 64px;
+    }
+     .person-card h3 {
+         font-size: 0.9rem;
+    }
+     .person-card button {
+         padding: 6px 10px;
+         font-size: 0.85rem;
+    }
+     .grid {
+         grid-template-columns: repeat(3, 1fr);
+         gap: 4px;
+    }
+     .grid-item img {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+    }
+}
+ @media (max-width: 480px) {
+     .main-rail, .ennamo {
+         padding: 16px 12px 140px;
+    }
+     .main-rail h1 {
+         font-size: 1.3rem;
+         margin-bottom: 16px;
+    }
+     .post-card {
+         padding: 12px;
+         border-radius: 8px;
+    }
+     .post-avatar img {
+         width: 32px;
+         height: 32px;
+    }
+     .username-link {
+         font-size: 0.9rem;
+    }
+     .post-card p {
+         font-size: 0.9rem;
+         line-height: 1.5;
+    }
+     .like-btn {
+         padding: 6px 10px;
+    }
+     .heart {
+         width: 20px;
+         height: 20px;
+    }
+     .like-btn .count {
+         font-size: 0.85rem;
+    }
+     .post-form {
+         padding: 16px 12px;
+    }
+     .post-form h2 {
+         font-size: 1.2rem;
+    }
+     .edit-form {
+         padding: 16px 12px;
+    }
+     .form-group label {
+         font-size: 0.9rem;
+    }
+     .people-grid {
+         grid-template-columns: repeat(2, 1fr);
+         gap: 12px;
+    }
+     .person-card {
+         padding: 12px;
+    }
+     .person-card img {
+         width: 56px;
+         height: 56px;
+    }
+     .grid {
+         grid-template-columns: repeat(2, 1fr);
+         gap: 2px;
+    }
+     .profile-wrap .avatar {
+         width: 80px;
+         height: 80px;
+    }
+     .stats {
+         font-size: 0.85rem;
+         gap: 12px;
+    }
+     .edit-toggle, .follow-btn, .unfollow-btn {
+         padding: 8px 16px;
+         font-size: 0.9rem;
+    }
+     .profile-main, .explore-main {
+         padding-bottom: 140px !important;
+    }
+     .posts-container {
+         margin-bottom: 20px;
+    }
+}
