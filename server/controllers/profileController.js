@@ -1,10 +1,10 @@
-import {
-   db
-} from "../db.js";
+// Profile controller for viewing and editing user profiles, exploring users, and follow relationships.
+// Recent changes standardize response payloads and keep profile update behavior consistent.
+import { db } from "../db.js";
+import { sendError, sendSuccess } from "../utils/apiResponse.js";
 
-// Get current logged-in user's info
 export const me = (req, res) => {
-    res.json({
+    return sendSuccess(res, {
         user: {
             id: req.session.userId,
             username: req.session.username
@@ -19,13 +19,30 @@ export const getProfile = async (req, res) => {
     } = req.params; // Extract username from request parameters
     try {
         const uRes = await db.query("SELECT id,username,bio,profile_pic_url FROM users WHERE username=$1", [username]); // Query database for user info
-        if (!uRes.rowCount) return res.status(404).json({
-            error: "User not found"
-        });
+        if (!uRes.rowCount) return sendError(res, 404, "User not found.");
         const user = uRes.rows[0]; // Get the user data
         const {
             rows: posts
-        } = await db.query("SELECT id,image_url FROM posts WHERE user_id=$1 ORDER BY created_at DESC", [user.id]); // Query database for user's posts
+        } = await db.query(`
+            SELECT p.id,
+                   p.caption,
+                   p.image_url,
+                   p.username,
+                   p.created_at,
+                   u.profile_pic_url,
+                   COUNT(l.id)::int AS like_count,
+                   EXISTS(
+                     SELECT 1 FROM likes l2
+                      WHERE l2.user_id = $2 AND l2.post_id = p.id
+                   ) AS user_liked,
+                   (SELECT COUNT(*)::int FROM comments c WHERE c.post_id = p.id) AS comment_count
+              FROM posts p
+              JOIN users u ON u.id = p.user_id
+              LEFT JOIN likes l ON l.post_id = p.id
+             WHERE p.user_id = $1
+             GROUP BY p.id, u.profile_pic_url
+             ORDER BY p.created_at DESC
+        `, [user.id, req.session.userId || 0]);
         const {
             rows: [counts]
         } = await db.query(`
@@ -40,7 +57,7 @@ export const getProfile = async (req, res) => {
             "SELECT 1 FROM follows WHERE follower_id=$1 AND following_id=$2",
             [req.session.userId, user.id]
         );
-        res.json({
+        return sendSuccess(res, {
             user,
             posts,
             isOwner: req.session.userId === user.id,
@@ -50,9 +67,7 @@ export const getProfile = async (req, res) => {
         }); // Send the profile data as JSON response
     } catch (e) {
         console.error("Profile error:", e);
-        res.status(500).json({
-            error: "Server error"
-        });
+        return sendError(res, 500, "Unable to load the profile right now.");
     }
 };
 
@@ -76,22 +91,16 @@ export const updateProfile = async (req, res) => {
             vals.push("/avatars/" + req.files.avatar[0].filename);
         }
         
-        if (updates.length === 0) return res.status(400).json({
-            error: "No updates provided"
-        }); // No updates to process
+        if (updates.length === 0) return sendError(res, 400, "Please provide a bio or profile image to update."); // No updates to process
 
         vals.push(req.session.userId); // Add user ID to values for WHERE clause
         const idPlaceholder = `$${vals.length}`; // Placeholder for user ID in the query
 
-        await db.query(`UPDATE users SET ${updates.join(", ")} WHERE id = ${idPlaceholder}`, vals); // Execute the update query
-        res.json({
-            ok: true
-        });
+        await db.query(`UPDATE users SET ${updates.join(", ")} WHERE id = ${idPlaceholder}`, vals);
+        return sendSuccess(res, { ok: true });
     } catch (e) {
         console.error("Update profile error:", e);
-        res.status(500).json({
-            error: "Failed to update profile"
-        });
+        return sendError(res, 500, "Unable to update your profile.");
     }
 };
 
@@ -108,14 +117,35 @@ export const exploreUsers = async (req, res) => {
        WHERE u.id<>$1
        ORDER BY u.username
     `, [me]); // Query database for users excluding the current user
-        res.json({
-            users: rows
-        }); // Send the list of users as JSON response
+        return sendSuccess(res, { users: rows }); // Send the list of users as JSON response
     } catch (e) {
         console.error(e);
-        res.status(500).json({
-            error: "Failed to load explore"
-        });
+        return sendError(res, 500, "Unable to load explore suggestions.");
+    }
+};
+
+export const searchUsers = async (req, res) => {
+    try {
+        const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
+        if (!query) return sendSuccess(res, { users: [] });
+
+        const me = req.session.userId;
+        const searchTerm = `%${query.replace(/%/g, "\\%")}%`;
+
+        const { rows } = await db.query(`
+      SELECT u.id, u.username, u.profile_pic_url,
+             EXISTS (SELECT 1 FROM follows f WHERE f.follower_id=$1 AND f.following_id=u.id) AS is_following
+        FROM users u
+       WHERE u.id <> $1
+         AND u.username ILIKE $2
+       ORDER BY u.username
+       LIMIT 15
+    `, [me, searchTerm]);
+
+        return sendSuccess(res, { users: rows });
+    } catch (e) {
+        console.error("searchUsers error:", e);
+        return sendError(res, 500, "Unable to search users.");
     }
 };
 
@@ -125,18 +155,12 @@ export const follow = async (req, res) => {
         const {
             rows: [tgt]
         } = await db.query("SELECT id FROM users WHERE username=$1", [req.params.username]); // Get target user by username
-        if (!tgt) return res.status(404).json({
-            error: "User not found"
-        });
-        await db.query("INSERT INTO follows(follower_id,following_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [req.session.userId, tgt.id]); // Insert follow relationship into database
-        res.json({
-            ok: true
-        });
+        if (!tgt) return sendError(res, 404, "User not found.");
+        await db.query("INSERT INTO follows(follower_id,following_id) VALUES($1,$2) ON CONFLICT DO NOTHING", [req.session.userId, tgt.id]);
+        return sendSuccess(res, { ok: true });
     } catch (e) {
         console.error("Follow err:", e);
-        res.status(500).json({
-            error: "Failed to follow"
-        });
+        return sendError(res, 500, "Unable to follow this user.");
     }
 };
 
@@ -146,18 +170,12 @@ export const unfollow = async (req, res) => {
         const {
             rows: [tgt]
         } = await db.query("SELECT id FROM users WHERE username=$1", [req.params.username]); // Get target user by username
-        if (!tgt) return res.status(404).json({
-            error: "User not found"
-        });
-        await db.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [req.session.userId, tgt.id]); // Delete follow relationship from database
-        res.json({
-            ok: true
-        });
+        if (!tgt) return sendError(res, 404, "User not found.");
+        await db.query("DELETE FROM follows WHERE follower_id=$1 AND following_id=$2", [req.session.userId, tgt.id]);
+        return sendSuccess(res, { ok: true });
     } catch (e) {
         console.error("Unfollow err:", e);
-        res.status(500).json({
-            error: "Failed to unfollow"
-        });
+        return sendError(res, 500, "Unable to unfollow this user.");
     }
 };
 
@@ -173,13 +191,9 @@ export const getFollowedUsers = async (req, res) => {
             ORDER BY u.username
         `, [userId]);
         
-        res.json({
-            followedUsers: rows
-        });
+        return sendSuccess(res, { followedUsers: rows });
     } catch (e) {
         console.error("Get followed users error:", e);
-        res.status(500).json({
-            error: "Failed to fetch followed users"
-        });
+        return sendError(res, 500, "Unable to load your followed users.");
     }
 };

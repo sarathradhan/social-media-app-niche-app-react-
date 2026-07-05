@@ -1,23 +1,19 @@
 // api.js
-// This file makes talking to your backend SUPER easy.
+// Shared API helper for frontend requests. Recent changes centralize request setup and error extraction
+// so pages can rely on consistent fetch behavior and readable error messages.
 // It automatically handles:
 // - base API URL (from Vite env or fallback)
 // - sending cookies (credentials: "include")
 // - JSON request helpers
 
-// Get base URL: either from .env or default localhost
 export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-// Core fetch wrapper
 export async function apiFetch(path, options = {}) {
   const url = `${API_BASE}${path}`;
-
-  // Ensure credentials + headers are correct
   const finalOptions = {
-    credentials: "include", // send session cookie always
+    credentials: "include",
     ...options,
     headers: {
-      // Don't set Content-Type for FormData - browser will set it with boundary
       ...(!(options.body instanceof FormData) && { "Content-Type": "application/json" }),
       ...(options.headers || {})
     }
@@ -26,26 +22,42 @@ export async function apiFetch(path, options = {}) {
   return fetch(url, finalOptions);
 }
 
-// Helper for GET JSON
-export async function apiGet(path) {
-  const res = await apiFetch(path);
-  return res.ok ? res.json() : Promise.reject(await res.json().catch(() => ({})));
+export function getApiErrorMessage(error, fallback = "Request failed") {
+  if (error?.data?.message) return error.data.message;
+  if (error?.data?.error) return error.data.error;
+  if (error?.message) return error.message;
+  return fallback;
 }
 
-// Helper for POST JSON
+export async function apiRequest(path, options = {}) {
+  const res = await apiFetch(path, options);
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw {
+      status: res.status,
+      data,
+      message: getApiErrorMessage({ data }, "Request failed")
+    };
+  }
+
+  return { ok: true, data, status: res.status, res };
+}
+
+export async function apiGet(path) {
+  return apiRequest(path);
+}
+
 export async function apiPost(path, body = {}) {
-  const res = await apiFetch(path, {
+  return apiRequest(path, {
     method: "POST",
     body: JSON.stringify(body)
   });
-  return res.ok ? res.json() : Promise.reject(await res.json().catch(() => ({})));
 }
 
-// Helper for file uploads
 export async function apiUpload(path, formData) {
-  const res = await apiFetch(path, {
+  return apiRequest(path, {
     method: "POST",
-    body: formData // FormData auto-handles headers
+    body: formData
   });
-  return res.ok ? res.json() : Promise.reject(await res.json().catch(() => ({})));
 }

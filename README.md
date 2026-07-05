@@ -154,6 +154,14 @@ Project/
 │
 ├── views/                           # EJS templates (legacy, not used)
 │
+├── DEPLOYMENT_GUIDE.md             # Detailed deployment instructions
+├── DEPLOYMENT_CHECKLIST.md         # Step-by-step checklist
+├── FEED_JSON_STRUCTURE.md          # Feed data format
+├── IMAGE_ACCESS_GUIDE.md           # How images work
+├── FIXES_APPLIED.md                # What was fixed
+├── START_HERE.md                   # Getting started guide
+├── README_FIXES.md                 # Quick summary
+├── QUICK_START.txt                 # Visual summary
 ├── .gitignore                      # Git ignore rules
 └── README.md                       # This file
 ```
@@ -636,3 +644,5 @@ Last updated: December 8, 2025
 The application is fully functional, tested, and ready for deployment. Just complete the 3 pre-deployment steps and you're live!
 
 ---
+
+**Built with ❤️ by Niche Team**

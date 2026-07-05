@@ -1,7 +1,8 @@
-// client/src/Signup.js
-import React, { useState } from "react";
+// Signup screen with stronger client-side validation. Recent changes add trimmed field handling,
+// password confirmation checks, loading-state protection, and clearer toast feedback.
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, API_BASE } from "./api";
+import { API_BASE, apiRequest, getApiErrorMessage } from "./api";
 import { useToast } from "./Toast";
 import { useSession } from "./App";
 
@@ -10,53 +11,45 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const nav = useNavigate();
   const { addToast } = useToast();
-  const { setSession } = useSession();
+  const { session, setSession } = useSession();
+
+  useEffect(() => {
+    if (session) nav("/", { replace: true });
+  }, [nav, session]);
 
   async function submit(e) {
     e.preventDefault();
-    
-    if (!username.trim() || !password.trim() || !confirmPassword.trim()) {
-      addToast("Please fill in all fields", "warning");
-      return;
-    }
+    if (loading) return;
 
-    if (password !== confirmPassword) {
-      addToast("Passwords do not match", "warning");
-      return;
-    }
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = confirmPassword.trim();
+    const nextErrors = {};
 
-    if (password.length < 6) {
-      addToast("Password must be at least 6 characters", "warning");
-      return;
-    }
+    if (!trimmedUsername) nextErrors.username = "Username is required.";
+    if (trimmedUsername.length < 3) nextErrors.username = "Username must be at least 3 characters.";
+    if (!trimmedPassword) nextErrors.password = "Password is required.";
+    if (trimmedPassword.length < 6) nextErrors.password = "Password must be at least 6 characters.";
+    if (!trimmedConfirm) nextErrors.confirm = "Please confirm your password.";
+    if (trimmedPassword && trimmedConfirm && trimmedPassword !== trimmedConfirm) nextErrors.confirm = "Passwords do not match.";
 
-    if (username.length < 3) {
-      addToast("Username must be at least 3 characters", "warning");
-      return;
-    }
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
 
     setLoading(true);
     try {
-      const res = await apiFetch("/api/auth/signup", {
+      const { data } = await apiRequest("/api/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setSession(data.user);
-        addToast(`Welcome to Niche, ${data.user.username}!`, "success");
-        setTimeout(() => nav("/"), 500);
-      } else {
-        const errData = await res.json();
-        addToast(errData.error || "Signup failed", "error");
-      }
-    } catch (err) {
-      console.error("Signup error:", err);
-      addToast("Network error. Please try again.", "error");
+      setSession(data.user);
+      addToast(`Welcome to Niche, ${data.user.username}!`, "success");
+      nav("/", { replace: true });
+    } catch (error) {
+      addToast(getApiErrorMessage(error, "Signup failed"), "error");
     } finally {
       setLoading(false);
     }
@@ -70,45 +63,72 @@ export default function Signup() {
         </div>
         <div className="right">
           <h1>Welcome to Niche</h1>
-          <form onSubmit={submit}>
-            <label>Username or E-mail</label><br/>
-            <input 
-              type="text" 
-              name="username" 
-              value={username} 
-              onChange={e=>setUsername(e.target.value)} 
-              disabled={loading}
-              required 
-            /><br/>
-            <label>Password:</label><br/>
-            <input 
-              type="password" 
-              name="password" 
-              value={password} 
-              onChange={e=>setPassword(e.target.value)} 
-              disabled={loading}
-              required 
-            /><br/>
-            <label>Confirm Your Password:</label><br/>
-            <input 
-              type="password" 
-              name="confirm" 
-              value={confirmPassword} 
-              onChange={e=>setConfirmPassword(e.target.value)} 
-              disabled={loading}
-              required 
-            /><br/>
-            <input type="submit" value={loading ? "Creating account..." : "Sign Up"} style={{marginLeft:"50%", transform:"translateX(-50%)"}} disabled={loading}/>
+          <p className="auth-subtitle">Create your account and join the community</p>
+          <form className="signup-form" onSubmit={submit} noValidate>
+            <div>
+              <label htmlFor="signup-username">Username</label>
+              <input
+                id="signup-username"
+                type="text"
+                name="username"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (errors.username) setErrors((prev) => ({ ...prev, username: "" }));
+                }}
+                disabled={loading}
+                placeholder="Pick a username"
+                autoComplete="username"
+              />
+              {errors.username ? <div className="field-error">{errors.username}</div> : null}
+            </div>
+            <div>
+              <label htmlFor="signup-password">Password</label>
+              <input
+                id="signup-password"
+                type="password"
+                name="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                }}
+                disabled={loading}
+                placeholder="Create a password"
+                autoComplete="new-password"
+              />
+              {errors.password ? <div className="field-error">{errors.password}</div> : null}
+            </div>
+            <div>
+              <label htmlFor="signup-confirm">Confirm password</label>
+              <input
+                id="signup-confirm"
+                type="password"
+                name="confirm"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (errors.confirm) setErrors((prev) => ({ ...prev, confirm: "" }));
+                }}
+                disabled={loading}
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+              />
+              {errors.confirm ? <div className="field-error">{errors.confirm}</div> : null}
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
+              {loading ? "Creating account..." : "Sign Up"}
+            </button>
           </form>
 
           <div className="line"></div>
-          <h1 style={{fontSize:"10px"}}>Or</h1>
+          <span className="auth-or">Or</span>
           <div className="socials">
-            <a href={`${API_BASE}/api/auth/google`}><img src="/ICONS/google.png" alt="Google Signup"/></a>
-            <a href="#"><img src="/ICONS/apple.png" alt="Apple Signup"/></a>
-            <a href="#"><img src="/ICONS/twitter.png" alt="Twitter Signup"/></a>
+            <a href={`${API_BASE}/api/auth/google`}><img src="/ICONS/google.png" alt="Google Signup" /></a>
+            <a href="#"><img src="/ICONS/apple.png" alt="Apple Signup" /></a>
+            <a href="#"><img src="/ICONS/twitter.png" alt="Twitter Signup" /></a>
           </div>
-          <h1 style={{fontSize:"10px", color:"rgb(138,138,138)"}}>Already have an account? <span><a href="/login" style={{color:"rgb(138,138,138)"}}>Sign In</a></span></h1>
+          <p className="auth-footer">Already have an account? <a href="/login">Sign In</a></p>
         </div>
       </div>
     </div>

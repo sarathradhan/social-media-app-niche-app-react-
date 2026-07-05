@@ -1,30 +1,72 @@
-// client/src/Profile.js
+// Profile page and profile editing flow. Recent changes add loading states, avatar validation,
+// clearer follow actions, and better edit-form handling for a smoother profile experience.
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { apiFetch, API_BASE } from "./api";
+import { apiFetch, API_BASE, getApiErrorMessage } from "./api";
 import { useToast } from "./Toast";
 import { useSession } from "./App";
+import { EmptyState, ErrorState, LoadingState } from "./StatePanel";
+import { validateImageFile } from "./utils/imageValidation";
+import IconButton from "./components/IconButton";
+import { CheckIcon, CloseIcon, EditIcon, UserMinusIcon, UserPlusIcon } from "./components/Icons";
+import PostPreviewModal from "./PostPreviewModal";
 
 export default function Profile({ session }) {
   const { username } = useParams();
   const [data, setData] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [avatarError, setAvatarError] = useState("");
   const { addToast } = useToast();
   const { refreshFollowed } = useSession();
 
-  useEffect(() => { (async () => {
-    const res = await apiFetch(`/api/profile/${username}`);
-    if (res.ok) setData(await res.json());
-    else setData({ error: "Failed to load profile" });
-  })(); }, [username]);
+  async function loadProfile() {
+    setProfileLoading(true);
+    try {
+      const res = await apiFetch(`/api/profile/${username}`);
+      if (res.ok) {
+        setData(await res.json());
+      } else {
+        setData({ error: "Failed to load profile" });
+      }
+    } catch (error) {
+      setData({ error: "Failed to load profile" });
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  useEffect(() => { loadProfile(); }, [username]);
+
+  function handlePostUpdate(updatedPost) {
+    setData((prev) => {
+      if (!prev?.posts) return prev;
+      return {
+        ...prev,
+        posts: prev.posts.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
+      };
+    });
+    setSelectedPost((prev) => (prev?.id === updatedPost.id ? { ...prev, ...updatedPost } : prev));
+  }
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+    setAvatarError("");
+
     const fd = new FormData(e.target);
+    const avatar = fd.get("avatar");
+    if (avatar instanceof File && avatar.name) {
+      const validation = validateImageFile(avatar);
+      if (!validation.valid) {
+        setAvatarError(validation.message);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await apiFetch("/api/profile", { method: "PUT", body: fd });
       if (res.ok) {
@@ -36,10 +78,9 @@ export default function Profile({ session }) {
         }
       } else {
         const errorData = await res.json();
-        addToast(errorData.error || "Failed to save profile", "error");
+        addToast(errorData.message || errorData.error || "Failed to save profile", "error");
       }
     } catch (err) {
-      console.error("Profile update error:", err);
       addToast("Network error updating profile", "error");
     } finally {
       setLoading(false);
@@ -47,35 +88,41 @@ export default function Profile({ session }) {
   };
 
   const handleFollow = async () => {
-    const res = await apiFetch(`/api/profile/follow/${username}`, { method: "POST" });
-    if (res.ok) {
-      addToast(`Now following ${username}`, "success");
-      refreshFollowed();
-      // Reload profile data
-      const r2 = await apiFetch(`/api/profile/${username}`);
-      if (r2.ok) setData(await r2.json());
-    } else {
-      const err = await res.json().catch(() => ({}));
-      addToast(err.error || "Failed to follow user", "error");
+    try {
+      const res = await apiFetch(`/api/profile/follow/${username}`, { method: "POST" });
+      if (res.ok) {
+        addToast(`Now following ${username}`, "success");
+        refreshFollowed();
+        const r2 = await apiFetch(`/api/profile/${username}`);
+        if (r2.ok) setData(await r2.json());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        addToast(err.message || err.error || "Failed to follow user", "error");
+      }
+    } catch (error) {
+      addToast("Network error while following user", "error");
     }
   };
 
   const handleUnfollow = async () => {
-    const res = await apiFetch(`/api/profile/unfollow/${username}`, { method: "POST" });
-    if (res.ok) {
-      addToast(`Unfollowed ${username}`, "success");
-      refreshFollowed();
-      // Reload profile data
-      const r2 = await apiFetch(`/api/profile/${username}`);
-      if (r2.ok) setData(await r2.json());
-    } else {
-      const err = await res.json().catch(() => ({}));
-      addToast(err.error || "Failed to unfollow user", "error");
+    try {
+      const res = await apiFetch(`/api/profile/unfollow/${username}`, { method: "POST" });
+      if (res.ok) {
+        addToast(`Unfollowed ${username}`, "success");
+        refreshFollowed();
+        const r2 = await apiFetch(`/api/profile/${username}`);
+        if (r2.ok) setData(await r2.json());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        addToast(err.message || err.error || "Failed to unfollow user", "error");
+      }
+    } catch (error) {
+      addToast("Network error while unfollowing user", "error");
     }
   };
 
-  if (!data) return <p>Loading...</p>;
-  if (data.error) return <p>{data.error}</p>;
+  if (profileLoading) return <main className="profile-main"><LoadingState label="Loading profile..." /></main>;
+  if (data?.error) return <main className="profile-main"><ErrorState message={data.error} onRetry={loadProfile} /></main>;
 
   const { user, posts, isOwner, isFollowing, followerCount, followingCount } = data;
 
@@ -84,10 +131,10 @@ export default function Profile({ session }) {
       <div className="profile-container">
         <section className="profile-left">
           <section className="profile-wrap">
-            <img 
-              src={user.profile_pic_url ? `${API_BASE}${user.profile_pic_url}` : '/default.png'} 
-              alt="avatar" 
-              className="avatar" 
+            <img
+              src={user.profile_pic_url ? `${API_BASE}${user.profile_pic_url}` : "/default.png"}
+              alt="avatar"
+              className="avatar"
             />
             <div className="meta">
               <h2>{user.username}</h2>
@@ -97,40 +144,56 @@ export default function Profile({ session }) {
                 <span>{followingCount} following</span>
               </div>
               {user.bio ? <p className="bio" id="bio-text">{user.bio}</p> :
-                isOwner ? <p className="bio" id="bio-text" style={{fontStyle:"italic", color:"#777"}}>Add a bio…</p> : null}
+                isOwner ? <p className="bio" id="bio-text" style={{ fontStyle: "italic", color: "var(--muted)" }}>Add a bio…</p> : null}
 
-              {isOwner ? (
-                <button className="edit-toggle" onClick={() => setShowEdit(s => !s)}>
-                  {showEdit ? "Cancel" : "Edit profile"}
-                </button>
-              ) : (
-                isFollowing ? (
-                  <button className="unfollow-btn" onClick={handleUnfollow}>Unfollow</button>
+              <div className="profile-actions">
+                {isOwner ? (
+                  <IconButton
+                    label={showEdit ? "Cancel editing profile" : "Edit profile"}
+                    variant={showEdit ? "ghost" : "primary"}
+                    size="sm"
+                    onClick={() => setShowEdit((s) => !s)}
+                  >
+                    {showEdit ? <CloseIcon /> : <EditIcon />}
+                  </IconButton>
                 ) : (
-                  <button className="follow-btn" onClick={handleFollow}>Follow</button>
-                )
-              )}
+                  isFollowing ? (
+                    <IconButton label={`Unfollow ${user.username}`} variant="ghost" size="sm" onClick={handleUnfollow}>
+                      <UserMinusIcon />
+                    </IconButton>
+                  ) : (
+                    <IconButton label={`Follow ${user.username}`} variant="primary" size="sm" onClick={handleFollow}>
+                      <UserPlusIcon />
+                    </IconButton>
+                  )
+                )}
+              </div>
 
               {isOwner && showEdit && (
-                <form className="edit-form" encType="multipart/form-data" onSubmit={handleProfileUpdate}>
+                <form className="edit-form" encType="multipart/form-data" onSubmit={handleProfileUpdate} noValidate>
                   <div className="form-group">
                     <label><strong>Change Avatar</strong></label>
-                    <input 
-                      type="file" 
-                      name="avatar" 
-                      accept="image/*"
+                    <input
+                      type="file"
+                      name="avatar"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
                       disabled={loading}
                     />
+                      {avatarError ? <div className="field-error">{avatarError}</div> : null}
                   </div>
-                  
+
                   <div className="form-group">
                     <label><strong>Edit Bio</strong></label>
-                    <textarea name="bio" defaultValue={user.bio || ''} placeholder="Tell us about yourself..." disabled={loading} rows="4"></textarea>
+                    <textarea name="bio" defaultValue={user.bio || ""} placeholder="Tell us about yourself..." disabled={loading} rows="4"></textarea>
                   </div>
-                  
-                  <div className="form-buttons">
-                    <button type="submit" disabled={loading} className="save-btn">{loading ? "Saving..." : "Save Changes"}</button>
-                    <button type="button" onClick={() => setShowEdit(false)} disabled={loading} className="cancel-btn">Cancel</button>
+
+                  <div className="form-buttons form-buttons--icons">
+                    <IconButton type="submit" label={loading ? "Saving profile" : "Save profile changes"} variant="success" disabled={loading}>
+                      <CheckIcon />
+                    </IconButton>
+                    <IconButton type="button" label="Cancel editing profile" variant="ghost" onClick={() => setShowEdit(false)} disabled={loading}>
+                      <CloseIcon />
+                    </IconButton>
                   </div>
                 </form>
               )}
@@ -140,10 +203,10 @@ export default function Profile({ session }) {
 
         <section className="profile-right">
           {posts.length === 0 ? (
-            <p style={{textAlign: 'center', color:"#777", marginTop: 20}}>No posts yet</p>
+            <EmptyState title="No posts yet" message="This profile has not shared anything yet." />
           ) : (
             <div className="grid">
-              {posts.map(p => (
+              {posts.map((p) => (
                 <div key={p.id} className="grid-item" onClick={() => setSelectedPost(p)}>
                   {p.image_url ? (
                     <>
@@ -153,8 +216,8 @@ export default function Profile({ session }) {
                       </div>
                     </>
                   ) : (
-                    <div style={{aspectRatio: '1/1', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius)'}}>
-                      <p style={{textAlign: 'center', padding: '10px'}}>{p.caption?.substring(0, 50)}...</p>
+                    <div className="grid-caption-fallback">
+                      <p>{p.caption?.substring(0, 50)}...</p>
                     </div>
                   )}
                 </div>
@@ -165,17 +228,13 @@ export default function Profile({ session }) {
       </div>
 
       {selectedPost && (
-        <div className="modal-overlay" onClick={() => setSelectedPost(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedPost(null)}>×</button>
-            <div className="modal-body">
-              {selectedPost.image_url && <img src={`${API_BASE}${selectedPost.image_url}`} alt="post" className="modal-image" />}
-              <div className="modal-text">
-                <p className="modal-caption">{selectedPost.caption}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PostPreviewModal
+          post={selectedPost}
+          session={session}
+          authorUsername={user.username}
+          onClose={() => setSelectedPost(null)}
+          onPostUpdate={handlePostUpdate}
+        />
       )}
     </main>
   );

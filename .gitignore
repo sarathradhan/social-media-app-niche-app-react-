@@ -24,6 +24,8 @@ Thumbs.db
 # Uploaded files (avatars & posts)
 public/uploads/
 public/avatars/
+server/public/uploads/
+server/public/avatars/
 
 # Build artifacts
 dist/
@@ -50,6 +52,8 @@ out/
 temp/
 tmp/
 *.tmp
+*.out
+nul
 
 # Testing
 coverage/

@@ -1,13 +1,10 @@
 // client/src/App.jsx
-// Top-level app. Handles session bootstrapping, followed-users, routing,
-// and provides a SessionContext so child components can read session without prop-drilling.
-
+// App shell and session management for the client. Recent changes added session hydration,
+// protected-route guards, guest-route redirects, and a shared session context for the app.
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
-import { apiFetch } from "./api"; // helper that uses credentials: "include"
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
+import { apiFetch, apiRequest } from "./api";
 
-// Import your page components. Make sure filenames match these imports:
-// Feed.js, Explore.js, New.js, MyPosts.js, Liked.js, Profile.js, Login.js, Signup.js
 import Feed from "./Feed";
 import Explore from "./Explore";
 import New from "./New";
@@ -16,12 +13,13 @@ import Liked from "./Liked";
 import Profile from "./Profile";
 import Login from "./Login";
 import Signup from "./signup";
-
-// Sidebar components stay the same
+import Unauthorized from "./Unauthorized";
 import Sidebar from "./Sidebar";
 import Side2 from "./Side2";
+import { ThemeProvider, useTheme } from "./ThemeContext";
+import IconButton from "./components/IconButton";
+import { LogOutIcon, MoonIcon, SunIcon } from "./components/Icons";
 
-// Create a React context so any component can access session and helpers
 export const SessionContext = createContext({
   session: null,
   setSession: () => {},
@@ -29,85 +27,70 @@ export const SessionContext = createContext({
   refreshFollowed: async () => {}
 });
 
-// small convenience hook to use session inside components
 export function useSession() {
   return useContext(SessionContext);
 }
 
-// Main App component
 export default function App() {
-  const [session, setSession] = useState(null); // { id, username } or null
-  const [followedUsers, setFollowedUsers] = useState([]); // small list for right sidebar
-  const [bootstrapped, setBootstrapped] = useState(false); // show loading until we tried to hydrate session
+  const [session, setSession] = useState(null);
+  const [followedUsers, setFollowedUsers] = useState([]);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
-  // fetch session info from server to know if user is logged in
   async function fetchSession() {
     try {
-      const res = await apiFetch("/api/profile/me"); // server should return { user: { id, username } }
-      if (res.ok) {
-        const j = await res.json();
-        setSession(j.user || null);
+      const result = await apiRequest("/api/profile/me");
+      setSession(result.data?.user || null);
+    } catch (e) {
+      if (e.status === 401) {
+        setSession(null);
       } else {
+        console.error("Session fetch error", e);
         setSession(null);
       }
-    } catch (e) {
-      console.error("Session fetch error", e);
-      setSession(null);
     } finally {
       setBootstrapped(true);
     }
   }
 
-  // fetch condensed followed-users list used in the sidebar
   async function fetchFollowedUsers() {
     try {
-      // Correct endpoint path
-      const res = await apiFetch("/api/profile/followed");
-      if (res.ok) {
-        const j = await res.json(); // { followedUsers: [...] }
-        setFollowedUsers(j.followedUsers || []);
-        return;
-      }
-      // fallback: try profile/me in case your backend returns followedUsers there
-      const res2 = await apiFetch("/api/profile/me");
-      if (res2.ok) {
-        const j2 = await res2.json();
-        if (j2.followedUsers) setFollowedUsers(j2.followedUsers);
-        else setFollowedUsers([]);
+      const result = await apiRequest("/api/profile/followed");
+      setFollowedUsers(result.data?.followedUsers || []);
+    } catch (e) {
+      if (e.status === 401) {
+        setFollowedUsers([]);
       } else {
+        console.error("Followed fetch error", e);
         setFollowedUsers([]);
       }
-    } catch (e) {
-      console.error("Followed fetch error", e);
-      setFollowedUsers([]);
     }
   }
 
-  // helper exposed via context so children can refresh the followed list
   async function refreshFollowed() {
     await fetchFollowedUsers();
   }
 
-  // bootstrap session on mount
   useEffect(() => {
-    (async () => {
-      await fetchSession();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void fetchSession();
   }, []);
 
-  // whenever session changes (login or logout), refresh followed users
   useEffect(() => {
-    if (session) fetchFollowedUsers();
-    else setFollowedUsers([]);
+    if (session) {
+      void fetchFollowedUsers();
+    } else {
+      setFollowedUsers([]);
+    }
   }, [session]);
 
-  // while we load initial session show a simple loader
   if (!bootstrapped) {
-    return <div style={{ padding: 20 }}>Loading app...</div>;
+    return (
+      <div className="app-loading">
+        <div className="spinner" aria-hidden="true" />
+        <span>Loading Niche...</span>
+      </div>
+    );
   }
 
-  // context value for children
   const contextValue = {
     session,
     setSession,
@@ -116,34 +99,137 @@ export default function App() {
   };
 
   return (
-    <SessionContext.Provider value={contextValue}>
-      <BrowserRouter>
-        <AppLayout session={session} />
-      </BrowserRouter>
-    </SessionContext.Provider>
+    <ThemeProvider>
+      <SessionContext.Provider value={contextValue}>
+        <BrowserRouter>
+          <AppLayout session={session} bootstrapped={bootstrapped} />
+          <MobileTopBar session={session} />
+          <MobileBottomNav session={session} />
+        </BrowserRouter>
+      </SessionContext.Provider>
+    </ThemeProvider>
   );
 }
 
-function AppLayout({ session }) {
+function ProtectedRoute({ session, bootstrapped, children }) {
   const location = useLocation();
-  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+
+  if (!bootstrapped) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" aria-hidden="true" />
+        <span>Loading Niche...</span>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  }
+
+  return children;
+}
+
+function GuestRoute({ session, bootstrapped, children }) {
+  if (!bootstrapped) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" aria-hidden="true" />
+        <span>Loading Niche...</span>
+      </div>
+    );
+  }
+
+  if (session) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+function MobileTopBar({ session }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { setSession } = useSession();
+  const { isDark, toggleTheme } = useTheme();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/unauthorized";
+
+  if (!session || isAuthPage) return null;
+
+  async function handleLogout() {
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    setSession(null);
+    navigate("/login");
+  }
+
+  return (
+    <header className="mobile-top-bar" aria-label="Mobile account actions">
+      <span className="mobile-top-bar__user">@{session.username}</span>
+      <div className="mobile-top-bar__actions">
+        <IconButton
+          label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+        >
+          {isDark ? <SunIcon /> : <MoonIcon />}
+        </IconButton>
+        <IconButton label="Log out" variant="ghost" size="sm" onClick={handleLogout}>
+          <LogOutIcon />
+        </IconButton>
+      </div>
+    </header>
+  );
+}
+
+function MobileBottomNav({ session }) {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/unauthorized";
+  if (!session || isAuthPage) return null;
+
+  const links = [
+    { to: "/", label: "Home", match: (path) => path === "/" },
+    { to: "/explore", label: "Explore", match: (path) => path.startsWith("/explore") },
+    { to: "/new", label: "Create", match: (path) => path.startsWith("/new") },
+    { to: "/liked", label: "Liked", match: (path) => path.startsWith("/liked") },
+    { to: "/myposts", label: "Mine", match: (path) => path.startsWith("/myposts") }
+  ];
+
+  return (
+    <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+      {links.map(({ to, label, match }) => (
+        <Link
+          key={to}
+          to={to}
+          title={label}
+          className={match(location.pathname) ? "active" : ""}
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function AppLayout({ session, bootstrapped }) {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/unauthorized";
 
   return (
     <>
-      {/* Sidebar components - fixed position handled by CSS */}
       {!isAuthPage && <Sidebar session={session} />}
       {!isAuthPage && <Side2 session={session} />}
 
-      {/* Main content area */}
       <Routes>
-        <Route path="/" element={<Feed session={session} />} />
-        <Route path="/explore" element={<Explore session={session} />} />
-        <Route path="/new" element={<New session={session} />} />
-        <Route path="/myposts" element={<MyPosts session={session} />} />
-        <Route path="/liked" element={<Liked session={session} />} />
-        <Route path="/profile/:username" element={<Profile session={session} />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><Feed session={session} /></ProtectedRoute>} />
+        <Route path="/explore" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><Explore session={session} /></ProtectedRoute>} />
+        <Route path="/new" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><New session={session} /></ProtectedRoute>} />
+        <Route path="/myposts" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><MyPosts session={session} /></ProtectedRoute>} />
+        <Route path="/liked" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><Liked session={session} /></ProtectedRoute>} />
+        <Route path="/profile/:username" element={<ProtectedRoute session={session} bootstrapped={bootstrapped}><Profile session={session} /></ProtectedRoute>} />
+        <Route path="/login" element={<GuestRoute session={session} bootstrapped={bootstrapped}><Login /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute session={session} bootstrapped={bootstrapped}><Signup /></GuestRoute>} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
     </>
   );

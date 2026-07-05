@@ -45,6 +45,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
+    // Use SameSite=None only in production (requires Secure). Keep Lax for localhost/dev.
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production"
   }
@@ -67,6 +68,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postsRoutes);
 app.use("/api/profile", profileRoutes);
 
+// (debug route removed)
 // health
 app.get("/api/health", (req, res) => res.json({ status: "ok", time: new Date().toISOString() }));
 

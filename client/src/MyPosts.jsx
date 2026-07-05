@@ -1,104 +1,124 @@
-// client/src/MyPostsExact.js
+// My Posts page. Recent changes add loading/error/empty states and replace the old browser confirm flow
+// with an in-app confirmation dialog before deleting a post.
 import React, { useEffect, useState } from "react";
-import { apiFetch, API_BASE } from "./api";
+import { apiFetch, API_BASE, getApiErrorMessage } from "./api";
+import { useToast } from "./Toast";
+import { EmptyState, ErrorState, LoadingState } from "./StatePanel";
+import ImageLightbox from "./ImageLightbox";
+import IconButton from "./components/IconButton";
+import { CloseIcon, TrashIcon } from "./components/Icons";
 
 export default function MyPosts({ session }) {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const { addToast } = useToast();
 
   async function load() {
-    const res = await apiFetch("/api/posts/mine");
-    if (res.ok) setPosts((await res.json()).posts || []);
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiFetch("/api/posts/mine");
+      if (!res.ok) throw new Error("Unable to load your posts");
+      setPosts((await res.json()).posts || []);
+    } catch (error) {
+      const message = getApiErrorMessage({ message: error.message }, "Unable to load your posts");
+      setError(message);
+      addToast(message, "error");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(()=>{ load(); }, []);
+  useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!pendingDeleteId) return undefined;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [pendingDeleteId]);
 
   async function removePost(id) {
-    if (!window.confirm("Delete this post?")) return;
-    const res = await apiFetch(`/api/posts/${id}`, { method: "DELETE" });
-    if (res.ok) load();
-    else alert("Delete failed");
+    try {
+      const res = await apiFetch(`/api/posts/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        addToast("Post deleted", "success");
+        load();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        addToast(err.message || err.error || "Delete failed", "error");
+      }
+    } catch (error) {
+      addToast("Unable to delete post", "error");
+    }
   }
+
+  if (loading) return <main className="main-rail"><LoadingState label="Loading your posts..." /></main>;
 
   return (
     <main className="main-rail">
       <h1>My Posts</h1>
+      {error ? <ErrorState message={error} onRetry={load} /> : null}
+      {!error && posts.length === 0 ? <EmptyState title="No posts yet" message="Share your first post to get started." /> : null}
       <div className="posts-container">
-        {posts.length === 0 ? <p>You haven't posted anything yet.</p> :
-          posts.map(post => (
-            <div key={post.id} className="post-card">
-              <div className="post-header">
-                <div className="post-avatar">
-                  <img src={post.profile_pic_url ? `${API_BASE}${post.profile_pic_url}` : '/default.png'} alt={`avatar of ${post.username}`} loading="lazy" />
-                </div>
-                <a href={`/profile/${post.username}`} className="username-link">{post.username}</a>
+        {posts.map((post) => (
+          <div key={post.id} className="post-card">
+            <div className="post-header">
+              <div className="post-avatar">
+                <img src={post.profile_pic_url ? `${API_BASE}${post.profile_pic_url}` : "/default.png"} alt={`avatar of ${post.username}`} loading="lazy" />
               </div>
+              <a href={`/profile/${post.username}`} className="username-link">{post.username}</a>
+            </div>
 
-              <p>{post.caption}</p>
-              {post.image_url && (
-                <img 
-                  src={`${API_BASE}${post.image_url}`} 
-                  alt="Post Image" 
-                  loading="lazy"
-                  onClick={() => setSelectedImage(`${API_BASE}${post.image_url}`)}
-                  style={{ cursor: 'pointer' }}
-                />
-              )}
-              <button className="delete-btn" onClick={()=>removePost(post.id)}>Delete</button>
+            <p>{post.caption}</p>
+            {post.image_url && (
+              <img
+                src={`${API_BASE}${post.image_url}`}
+                alt="Post Image"
+                className="post-image"
+                loading="lazy"
+                onClick={() => setSelectedImage(`${API_BASE}${post.image_url}`)}
+              />
+            )}
+            <div className="post-actions">
+              <IconButton label="Delete post" variant="danger" size="sm" onClick={() => setPendingDeleteId(post.id)}>
+                <TrashIcon />
+              </IconButton>
+            </div>
           </div>
-        ))
-        }
+        ))}
       </div>
-      
-      {selectedImage && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-            cursor: 'pointer'
-          }}
-          onClick={() => setSelectedImage(null)}
-        >
-          <img 
-            src={selectedImage} 
-            alt="Full size" 
-            style={{
-              maxWidth: '90%',
-              maxHeight: '90%',
-              objectFit: 'contain'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            onClick={() => setSelectedImage(null)}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              background: 'white',
-              border: 'none',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              fontSize: '24px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            ×
-          </button>
+
+      {pendingDeleteId && (
+        <div className="modal-overlay" onClick={() => setPendingDeleteId(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete this post?</h3>
+            <p>This action cannot be undone.</p>
+            <div className="confirm-actions">
+              <IconButton label="Cancel" variant="ghost" onClick={() => setPendingDeleteId(null)}>
+                <CloseIcon />
+              </IconButton>
+              <IconButton
+                label="Delete post"
+                variant="danger"
+                onClick={() => {
+                  const id = pendingDeleteId;
+                  setPendingDeleteId(null);
+                  removePost(id);
+                }}
+              >
+                <TrashIcon />
+              </IconButton>
+            </div>
+          </div>
         </div>
       )}
+
+      <ImageLightbox src={selectedImage} onClose={() => setSelectedImage(null)} />
     </main>
   );
 }

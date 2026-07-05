@@ -33,7 +33,7 @@ export default function Side2({ session }) {
       <div className="vids">
         <h1>Following</h1>
         {followedUsers.length === 0 ? (
-          <p style={{color:"#777", fontSize:".9rem"}}>Follow people to see them here.</p>
+          <p className="empty-hint">Follow people to see them here.</p>
         ) : (
           followedUsers.map(u => (
             <div key={u.username} className="vid-row">
